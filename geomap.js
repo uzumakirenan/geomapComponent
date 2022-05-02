@@ -1,7 +1,7 @@
 const config = {
     container: {
-        id: "myTeste",
-        width: 800
+        id: "canvasContainer",
+        width: 700
     },
 
     mapOptions:{
@@ -11,6 +11,8 @@ const config = {
         },
         labels:{
             fontsize: 16,
+            bold: true,
+            italic: false,
             align: "left",
             color: "#000",
             display: true
@@ -50,18 +52,23 @@ const config = {
     }
     
 }
+const canvasContainer = document.getElementById(config.container.id)
+canvasContainer.style.position = "relative"
 
-const canvas = document.getElementById(config.container.id)
+const canvas = document.createElement("canvas")
 canvas.width = config.container.width
 canvas.height = config.container.width
-canvas.style.transform = "rotate(-90deg)"
+canvas.setAttribute("style", "transform: rotate(-90deg); border: 1px solid green; position: absolute; z-index: 0;")
 const ctx = canvas.getContext('2d')
 
-const canvasAction = document.getElementById("myTeste2")
+const canvasAction = document.createElement("canvas")
 canvasAction.width = config.container.width
 canvasAction.height = config.container.width
-canvasAction.style.transform = "rotate(-90deg)"
+canvasAction.setAttribute("style", "transform: rotate(-90deg); border: 1px solid red; position: absolute; z-index: 1;")
 const ctxAction = canvasAction.getContext('2d')
+
+canvasContainer.appendChild(canvas)
+canvasContainer.appendChild(canvasAction)
 
 //BRAZIL = brasilMap
 //USA = usaMap
@@ -208,7 +215,7 @@ function gerarContorno(){
 
     mapFeature.map((estado) => {
         ctx.beginPath()
-        ctx.strokeStyle = config.mapOptions.border.color
+        ctx.strokeStyle = config.mapOptions.border.color || "#ccc"
         let total;
         const stateHover = new Path2D()
         if(estado.geometry.type == "Polygon"){
@@ -273,12 +280,13 @@ function gerarLabels(){
             yMin = Math.min.apply(null,posY)
         }
 
-        
+        let bold = (config.mapOptions.labels.bold == true ? "bold " : "") || ""
+        let fontSize = config.mapOptions.labels.fontsize || 16
         ctx.beginPath()
         ctx.save()
-        ctx.fillStyle = config.mapOptions.labels.color
-        ctx.textAlign = config.mapOptions.labels.align
-        ctx.font = config.mapOptions.labels.fontsize + "px Calibri"
+        ctx.fillStyle = config.mapOptions.labels.color || "#000"
+        ctx.textAlign = config.mapOptions.labels.align || "left"
+        ctx.font = bold + fontSize + "px Calibri"
         if(estado.properties.name == "Goiás"){
             ctx.translate((setCenterPosition(xMax, xMin) * scale) + x - 15, (setCenterPosition(yMax, yMin) * scale) + y)
         } else {
@@ -438,4 +446,3 @@ if(config.mapOptions.labels.display){
 if(config.mapOptions.actions){
     gerarAcao()
 }
-
