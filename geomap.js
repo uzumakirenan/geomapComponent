@@ -1,36 +1,92 @@
-var tooltipPosX;
-var tooltipPosY;
+const config = {
+    container: {
+        id: "myTeste",
+        width: 800
+    },
 
-const canvas = document.getElementById("myTeste")
-canvas.width = 800
-canvas.height = 800
-//canvas.setAttribute("width", "800")
-//canvas.setAttribute("height", "800")
+    mapOptions:{
+        border: {
+            color: "#ccc",
+            display: true,
+        },
+        labels:{
+            fontsize: 16,
+            align: "left",
+            color: "#000",
+            display: true
+        },
+        actions: true
+    },
+
+    dataset: {
+        custom: true,
+        data: [
+            /*
+            {
+                name: "Curitiba",
+                color: "gray",
+                information: [{}]
+            },
+
+            {
+                name: "Piraquara",
+                color: "blue",
+                information: [{}]
+            },
+
+            {
+                name: "Quatro Barras",
+                color: "green",
+                information: [{}]
+            },
+
+            {
+                name: "Colombo",
+                color: "red",
+                information: [{}]
+            },
+            */
+        ]
+    }
+    
+}
+
+const canvas = document.getElementById(config.container.id)
+canvas.width = config.container.width
+canvas.height = config.container.width
+canvas.style.transform = "rotate(-90deg)"
 const ctx = canvas.getContext('2d')
+
+const canvasAction = document.getElementById("myTeste2")
+canvasAction.width = config.container.width
+canvasAction.height = config.container.width
+canvasAction.style.transform = "rotate(-90deg)"
+const ctxAction = canvasAction.getContext('2d')
+
+//BRAZIL = brasilMap
+//USA = usaMap
+//PARANA = paranaMap
+const mapName = brazilMap //<- COLOCAR O NOME DO MAPA AQUI
+
+
+const mapScales = mapName.scales
+const mapFeature = mapName.features
+
+const scale = (canvas.width / 100) * mapScales.scale //12.5 //12 //10
+const x = (canvas.width / 100) * mapScales.x //100 //500
+const y = (canvas.width / 100) * mapScales.y //1550 //900
+const dataset = config.dataset.custom === false ? [] : config.dataset.data
 
 var stateFills = []
 var selectedFill;
 var controllHover = 0;
-
-//const mapTeste = ChartGeo.topojson.feature(paranaMap, paranaMap.objects.units).features
-
-const mapTeste = paranaMap.features
-
-const scale = 100 //12 //10
-const x = 2900 //100 //500
-const y = 5530 //1550 //900
-const dataset = [/*
-    {city: "Curitiba", Color: "gray"},
-    {city: "Piraquara", Color: "blue"},
-    {city: "Quatro Barras", Color: "green"},
-    {city: "Colombo", Color: "red"},
-*/]
 var colorArray = []
 
 function verificaCor(){
     let cor = '#' + Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, '0');
     if(colorArray.length == 0){
         colorArray.push(cor)
+        return cor
     } else if(colorArray.includes(cor)){
         verificaCor()
     } else {
@@ -41,7 +97,7 @@ function verificaCor(){
 
 //preenchimento
 function gerarPreenchimento(){
-    mapTeste.map((estado) => {
+    mapFeature.map((estado) => {
 
         let color = verificaCor();
 
@@ -52,12 +108,13 @@ function gerarPreenchimento(){
         
         const stateFill = new Path2D()
         if(estado.geometry.type == "Polygon"){
+            
             total = estado.geometry.coordinates[0].length
             
             if(dataset.length != 0){
                 dataset.map(ds => {
-                    ctx.fillStyle = ds.Color
-                    if(estado.properties.name == ds.city){
+                    ctx.fillStyle = ds.color
+                    if(estado.properties.name == ds.name){
                         estado.geometry.coordinates[0].map((state, index) => {
                             if(index == 0){
                                 stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
@@ -71,14 +128,13 @@ function gerarPreenchimento(){
                             ctx.moveTo(0,0)
                             if(index+1 == total){
                                 ctx.fill(stateFill)
-                                stateFills.push({stateFill: stateFill, name: estado.properties.name, Color: ds.Color})
+                                stateFills.push({stateFill: stateFill, name: estado.properties.name, Color: ds.color})
                             }
                         })
                     }
                     
                 })
-            } else {
-            
+            } else {            
                 estado.geometry.coordinates[0].map((state, index) => {
                     if(index == 0){
                         stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
@@ -100,71 +156,59 @@ function gerarPreenchimento(){
         } else if(estado.geometry.type == "MultiPolygon"){
             total = estado.geometry.coordinates[0][0].length
 
-            dataset.map(ds => {
-                if(estado.properties.name == ds){
-                    estado.geometry.coordinates[0][0].map((state, index) => {
-                        if(index == 0){
-                            stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
-                            first = [(state[1] * scale) + x, (state[0] * scale) + y]
-                        } else if(index > 0 && index < total){
-                            stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
-                            stateFill.moveTo((state[1] * scale) + x, (state[0] * scale) + y)
-                        }
-                        
-                        stateFill.lineTo(first[0], first[1])
-                        ctx.moveTo(0,0)
-                        
-                    })
-                }
-            })
+            if(dataset.length != 0){
+                dataset.map(ds => {
+                    ctx.fillStyle = ds.color
+                    if(estado.properties.name == ds.name){
+                        estado.geometry.coordinates[0][0].map((state, index) => {
+                            if(index == 0){
+                                stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
+                                first = [(state[1] * scale) + x, (state[0] * scale) + y]
+                            } else if(index > 0 && index < total){
+                                stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
+                                stateFill.moveTo((state[1] * scale) + x, (state[0] * scale) + y)
+                            }
+                            
+                            stateFill.lineTo(first[0], first[1])
+                            ctx.moveTo(0,0)
+                            if(index+1 == total){
+                                ctx.fill(stateFill)
+                                stateFills.push({stateFill: stateFill, name: estado.properties.name, Color: color})
+                            }
+                        })
+                    }
+                })
+            } else {
+                estado.geometry.coordinates[0][0].map((state, index) => {
+                    if(index == 0){
+                        stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
+                        first = [(state[1] * scale) + x, (state[0] * scale) + y]
+                    } else if(index > 0 && index < total){
+                        stateFill.lineTo((state[1] * scale) + x, (state[0] * scale) + y)
+                        stateFill.moveTo((state[1] * scale) + x, (state[0] * scale) + y)
+                    }
+                    
+                    stateFill.lineTo(first[0], first[1])
+                    ctx.moveTo(0,0)
+                    if(index+1 == total){
+                        ctx.fill(stateFill)
+                        stateFills.push({stateFill: stateFill, name: estado.properties.name, Color: color})
+                    }
+                })
+            }
         }
+        
         ctx.closePath()
     })
-    canvas.addEventListener('mousemove', showTooltip)
-    canvas.addEventListener('click', clickedState)
-        
-    function showTooltip (event) {
-        ctx.clearRect(0,0, 800,800)
-        var selecteState = "";
-        stateFills.map((obj) => {
-            if (ctx.isPointInPath(obj.stateFill, event.offsetX, event.offsetY)) {
-                ctx.fillStyle = obj.Color + "5a"
-                
-                //console.log(obj.name + " - " + obj.Color)
-                //alert(`cidade: ${cidade.city}\nSales: ${cidade.Sales}\nCost:${cidade.Cost}\nQty: ${cidade.Qty}`)                
-                ctx.fill(obj.stateFill)
-                selecteState = obj.name
-            } else {
-                ctx.fillStyle = obj.Color
-                ctx.fill(obj.stateFill)
-            }
-            
-        })
-        gerarTooltip(selecteState)
-    }
-
-    function clickedState (event) {
-
-        stateFills.map((obj) => {
-
-            if (ctx.isPointInPath(obj.stateFill, event.offsetX, event.offsetY)) {                
-                alert(`${obj.name}\n${obj.Color}`)
-
-            } 
-        })
-        
-    }
 }
 
-gerarPreenchimento()
-//gerarLabels()
 
 //Contorno
 function gerarContorno(){
 
-    mapTeste.map((estado) => {
+    mapFeature.map((estado) => {
         ctx.beginPath()
-        ctx.strokeStyle = "#ccc"
+        ctx.strokeStyle = config.mapOptions.border.color
         let total;
         const stateHover = new Path2D()
         if(estado.geometry.type == "Polygon"){
@@ -198,12 +242,120 @@ function gerarContorno(){
 
 }
 
+//Labels
+function gerarLabels(){
+    mapFeature.map((estado) => {        
+        let posX = []
+        let posY = []
+        let xMax
+        let xMin
+        let yMax
+        let yMin
+        
+        if(estado.geometry.type == "Polygon"){            
+            estado.geometry.coordinates[0].map((state) => {
+                posX.push(state[1])
+                posY.push(state[0])                
+            })
+            xMax = Math.max.apply(null,posX)
+            xMin = Math.min.apply(null,posX)
+            yMax = Math.max.apply(null,posY)
+            yMin = Math.min.apply(null,posY)
+
+        } else if(estado.geometry.type == "MultiPolygon"){
+            estado.geometry.coordinates[0][0].map((state, index) => {
+                posX.push(state[1])
+                posY.push(state[0])
+            })
+            xMax = Math.max.apply(null,posX)
+            xMin = Math.min.apply(null,posX)
+            yMax = Math.max.apply(null,posY)
+            yMin = Math.min.apply(null,posY)
+        }
+
+        
+        ctx.beginPath()
+        ctx.save()
+        ctx.fillStyle = config.mapOptions.labels.color
+        ctx.textAlign = config.mapOptions.labels.align
+        ctx.font = config.mapOptions.labels.fontsize + "px Calibri"
+        if(estado.properties.name == "Goiás"){
+            ctx.translate((setCenterPosition(xMax, xMin) * scale) + x - 15, (setCenterPosition(yMax, yMin) * scale) + y)
+        } else {
+            ctx.translate((setCenterPosition(xMax, xMin) * scale) + x, (setCenterPosition(yMax, yMin) * scale) + y)
+        }
+        
+        ctx.rotate(Math.PI/2);
+        ctx.fillText(estado.properties.name, 0, 0)
+        ctx.restore()
+        ctx.closePath()
+    })
+}
+
+//Posiciona elementos no centro de um pais/estado/cidade
+function setCenterPosition(max, min){
+
+    //Gera a diferença
+    const difMax = max < 0 ? max * -1 : max
+    const difMin = min < 0 ? min * -1 : min
+    let result;
+
+    if(difMax > difMin){
+        if(max < 0){
+            result = parseFloat("-" + (difMax + difMin) / 2)
+        } else {
+            result = (difMax + difMin) / 2
+        }
+    }
+
+    if(difMin > difMax){
+        if(min < 0){
+            result = parseFloat("-" + (difMax + difMin) / 2)
+        } else {
+            result = (difMax + difMin) / 2
+        }
+    }
+
+    return result
+}
+
+function gerarAcao(){
+    
+    canvasAction.addEventListener('mousemove', showTooltip)
+    canvasAction.addEventListener('click', clickedState)
+        
+    function showTooltip (event) {
+        ctxAction.clearRect(0,0, canvasAction.width,canvasAction.height)
+        selecteState = "";
+        stateFills.map((obj) => {
+            if (ctxAction.isPointInPath(obj.stateFill, event.offsetX, event.offsetY)) {
+                ctxAction.fillStyle = "rgba(0,0,0,0.5)" //obj.Color + "5a"
+                ctxAction.fill(obj.stateFill)
+                selecteState = obj.name
+            } 
+            
+        })
+        gerarTooltip(selecteState)
+    }
+
+    function clickedState (event) {
+
+        stateFills.map((obj) => {
+            if (ctxAction.isPointInPath(obj.stateFill, event.offsetX, event.offsetY)) {                
+                alert(`${obj.name}\n${obj.Color}`)
+
+            } 
+        })
+        
+    }
+}
+
 //Gerar Tooltip
 function gerarTooltip(state){
     const dados = []
     const font = 16
 
-    mapTeste.map((estado) => {        
+    mapFeature.map((estado) => {        
         if(state == estado.properties.name){
             dados.push(state, "teste", "teste02", "Teste03", "Teste04", "teste06")
             const qtd = dados.length
@@ -236,137 +388,54 @@ function gerarTooltip(state){
             }
 
             
-            ctx.beginPath()
-            ctx.save()
-            ctx.fillStyle = "rgba(0,0,0,0.7)"
-            //ctx.textAlign = "left"
+            ctxAction.beginPath()
+            ctxAction.save()
+            ctxAction.fillStyle = "rgba(0,0,0,0.7)"
+            //ctxAction.textAlign = "left"
             if(estado.properties.name == "Goiás"){
-                ctx.translate((gerarDiferenca(xMax, xMin) * scale) + x - 15, (gerarDiferenca(yMax, yMin) * scale) + y)
+                ctxAction.translate((setCenterPosition(xMax, xMin) * scale) + x - 15, (setCenterPosition(yMax, yMin) * scale) + y)
             } else {
-                ctx.translate((gerarDiferenca(xMax, xMin) * scale) + x, (gerarDiferenca(yMax, yMin) * scale) + y)
+                ctxAction.translate((setCenterPosition(xMax, xMin) * scale) + x, (setCenterPosition(yMax, yMin) * scale) + y)
             }
             
-            ctx.rotate(Math.PI/2);
-            //ctx.fillText(estado.properties.name, 0, 0)
-            ctx.fillRect(0,0,100,((font) * qtd))
-            ctx.restore()
-            ctx.closePath()
+            ctxAction.rotate(Math.PI/2);
+            //ctxAction.fillText(estado.properties.name, 0, 0)
+            ctxAction.fillRect(0,0,100,((font) * qtd))
+            ctxAction.restore()
+            ctxAction.closePath()
 
-            ctx.beginPath()
-            ctx.save()
-            ctx.fillStyle = "#fff"
-            ctx.font = font + "px Calibri";
-            ctx.textBaseline = "top"
+            ctxAction.beginPath()
+            ctxAction.save()
+            ctxAction.fillStyle = "#fff"
+            ctxAction.font = font + "px Calibri";
+            ctxAction.textBaseline = "top"
             if(estado.properties.name == "Goiás"){
-                ctx.translate((gerarDiferenca(xMax, xMin) * scale) + x - 15, (gerarDiferenca(yMax, yMin) * scale) + y)
+                ctxAction.translate((setCenterPosition(xMax, xMin) * scale) + x - 15, (setCenterPosition(yMax, yMin) * scale) + y)
             } else {
-                ctx.translate((gerarDiferenca(xMax, xMin) * scale) + x, (gerarDiferenca(yMax, yMin) * scale) + y)
+                ctxAction.translate((setCenterPosition(xMax, xMin) * scale) + x, (setCenterPosition(yMax, yMin) * scale) + y)
             }
-            ctx.rotate(Math.PI/2);
+            ctxAction.rotate(Math.PI/2);
             dados.map((d, index) => {
-                //ctx.clearRect(0,0,800,800)
                 let position = (font) * index
-                
-                
-                ctx.fillText(d, 5, position)
+                ctxAction.fillText(d, 5, position)
                 
             })
-            ctx.restore()
-            ctx.closePath()
-
-            
-
+            ctxAction.restore()
+            ctxAction.closePath()
         }
     })
 }
 
-//Gerar Nomes
-function gerarLabels(){
-    mapTeste.map((estado) => {        
-        let posX = []
-        let posY = []
-        let xMax
-        let xMin
-        let yMax
-        let yMin
-        
-        if(estado.geometry.type == "Polygon"){            
-            estado.geometry.coordinates[0].map((state) => {
-                posX.push(state[1])
-                posY.push(state[0])                
-            })
-            xMax = Math.max.apply(null,posX)
-            xMin = Math.min.apply(null,posX)
-            yMax = Math.max.apply(null,posY)
-            yMin = Math.min.apply(null,posY)
-
-        } else if(estado.geometry.type == "MultiPolygon"){
-            estado.geometry.coordinates[0][0].map((state, index) => {
-                posX.push(state[1])
-                posY.push(state[0])
-            })
-            xMax = Math.max.apply(null,posX)
-            xMin = Math.min.apply(null,posX)
-            yMax = Math.max.apply(null,posY)
-            yMin = Math.min.apply(null,posY)
-        }
-
-        
-        ctx.beginPath()
-        ctx.save()
-        ctx.fillStyle = "#000"
-        ctx.textAlign = "left"
-        if(estado.properties.name == "Goiás"){
-            ctx.translate((gerarDiferenca(xMax, xMin) * scale) + x - 15, (gerarDiferenca(yMax, yMin) * scale) + y)
-        } else {
-            ctx.translate((gerarDiferenca(xMax, xMin) * scale) + x, (gerarDiferenca(yMax, yMin) * scale) + y)
-        }
-        
-        ctx.rotate(Math.PI/2);
-        ctx.fillText(estado.properties.name, 0, 0)
-        ctx.restore()
-        ctx.closePath()
-    })
+gerarPreenchimento()
+if(config.mapOptions.border.display){
+    gerarContorno()
 }
 
-function gerarDiferenca(max, min){
-
-    //Gera a diferença
-    const difMax = max < 0 ? max * -1 : max
-    const difMin = min < 0 ? min * -1 : min
-    let result;
-
-    if(difMax > difMin){
-        if(max < 0){
-            result = parseFloat("-" + (difMax + difMin) / 2)
-        } else {
-            result = (difMax + difMin) / 2
-        }
-    }
-
-    if(difMin > difMax){
-        if(min < 0){
-            result = parseFloat("-" + (difMax + difMin) / 2)
-        } else {
-            result = (difMax + difMin) / 2
-        }
-    }
-
-    return result
+if(config.mapOptions.labels.display){
+    gerarLabels()
 }
 
-function texto(y){
-    ctx.beginPath()
-    ctx.translate(0,0)
-    ctx.moveTo(0,0)
-    ctx.fillStyle = "#000"
-    ctx.font = "50px Calibri"
-    ctx.fillText("Renan Cano", 250, y)
-    ctx.closePath()
+if(config.mapOptions.actions){
+    gerarAcao()
 }
 
-texto(250)
-ctx.beginPath()
-ctx.fillStyle = "red"
-ctx.fillText("Renan Cano", 10, 10)
-ctx.closePath()

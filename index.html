@@ -10,23 +10,18 @@
     body{
       box-sizing: border-box;
     }
-
-    
-    #myTeste{
-      transform: rotate(-90deg);
-    }
     
   </style>
 
   <body>
-    <div>
-      <canvas id="myTeste" style="border: 1px solid green;"></canvas>
+    <div style="position: relative">
+      <canvas id="myTeste" style="border: 1px solid green; position:absolute; z-index: 0;"></canvas>
+      <canvas id="myTeste2" style="border: 1px solid red; position: absolute; z-index: 1"></canvas>
     </div> 
     
-    <script src="./mapa.js"></script>
-    <script src="./BRA.js"></script>
-    <script src="./USA.js"></script>
-    <script src="./PR.js"></script>
+    <script src="maps/countries/Brazil/map.js"></script>
+    <script src="maps/countries/USA/map.js"></script>
+    <script src="maps/countries/Brazil/cities/PR.js"></script>
     <script type="text/javascript" src="./geomap.js"></script>
 
   </body>
