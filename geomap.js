@@ -365,7 +365,7 @@ function gerarTooltip(state){
 
     mapFeature.map((estado) => {        
         if(state == estado.properties.name){
-            dados.push(state, "teste", "teste02", "Teste03", "Teste04", "teste06")
+            dados.push(state, "teste", "teste02", "Teste03", "Teste04", "teste06", "teste07", "teste08")
             const qtd = dados.length
             let posX = []
             let posY = []
@@ -395,11 +395,9 @@ function gerarTooltip(state){
                 yMin = Math.min.apply(null,posY)
             }
 
-            
+            //Tooltip container
             ctxAction.beginPath()
             ctxAction.save()
-            ctxAction.fillStyle = "rgba(0,0,0,0.7)"
-            //ctxAction.textAlign = "left"
             if(estado.properties.name == "Goiás"){
                 ctxAction.translate((setCenterPosition(xMax, xMin) * scale) + x - 15, (setCenterPosition(yMax, yMin) * scale) + y)
             } else {
@@ -407,11 +405,25 @@ function gerarTooltip(state){
             }
             
             ctxAction.rotate(Math.PI/2);
-            //ctxAction.fillText(estado.properties.name, 0, 0)
-            ctxAction.fillRect(0,0,100,((font) * qtd))
+            ctxAction.fillStyle = "rgba(0,0,0,0.7)"
+            ctxAction.translate(0, -(((font) * qtd) / 2))
+            if(dados.length <= 1){
+                ctxAction.fillRect(0,0,100,((font) * qtd))
+            } else {
+                ctxAction.lineTo(100,0)
+                ctxAction.lineTo(100,((font) * qtd))
+                ctxAction.lineTo(0,((font) * qtd))
+                ctxAction.lineTo(0,(((font) * qtd) / 2) - 10)
+                ctxAction.lineTo(-10,(((font) * qtd) / 2))
+                ctxAction.lineTo(0,(((font) * qtd) / 2) + 10)
+                ctxAction.lineTo(0,0)
+                ctxAction.fill()
+            }            
             ctxAction.restore()
             ctxAction.closePath()
+            
 
+            //Informacoes do tooltip
             ctxAction.beginPath()
             ctxAction.save()
             ctxAction.fillStyle = "#fff"
@@ -424,7 +436,7 @@ function gerarTooltip(state){
             }
             ctxAction.rotate(Math.PI/2);
             dados.map((d, index) => {
-                let position = (font) * index
+                let position = ((font) * index) - ((font) * qtd) / 2
                 ctxAction.fillText(d, 5, position)
                 
             })
