@@ -17,40 +17,57 @@ const config = {
             color: "#000",
             display: true
         },
-        actions: true
+        actions: {
+            active: true,
+
+            tooltip:{
+                active: false,
+            },
+
+            click:{
+                active: false,
+            }
+        }
     },
-
-    dataset: {
-        custom: true,
-        data: [
-            /*
-            {
-                name: "Curitiba",
-                color: "gray",
-                information: [{}]
-            },
-
-            {
-                name: "Piraquara",
-                color: "blue",
-                information: [{}]
-            },
-
-            {
-                name: "Quatro Barras",
-                color: "green",
-                information: [{}]
-            },
-
-            {
-                name: "Colombo",
-                color: "red",
-                information: [{}]
-            },
-            */
-        ]
-    }
     
+    dataset: {
+        information:[
+            {
+                name: "Rio Grande do Sul",
+                data: ["rio", "grande", "do", "sul"]
+            }
+        ],
+        custom: {
+            active: false,
+            data: [
+                /*
+                {
+                    name: "Curitiba",
+                    color: "gray",
+                    information: []
+                },
+
+                {
+                    name: "Piraquara",
+                    color: "blue",
+                    information: []
+                },
+
+                {
+                    name: "Quatro Barras",
+                    color: "green",
+                    information: []
+                },
+
+                {
+                    name: "Colombo",
+                    color: "red",
+                    information: []
+                },
+                */
+            ]
+        }
+    }
 }
 const canvasContainer = document.getElementById(config.container.id)
 canvasContainer.style.position = "relative"
@@ -82,7 +99,7 @@ const mapFeature = mapName.features
 const scale = (canvas.width / 100) * mapScales.scale //12.5 //12 //10
 const x = (canvas.width / 100) * mapScales.x //100 //500
 const y = (canvas.width / 100) * mapScales.y //1550 //900
-const dataset = config.dataset.custom === false ? [] : config.dataset.data
+const dataset = config.dataset.custom.active === false ? [] : config.dataset.custom.data
 
 var stateFills = []
 var selectedFill;
@@ -330,7 +347,10 @@ function setCenterPosition(max, min){
 function gerarAcao(){
     
     canvasAction.addEventListener('mousemove', showTooltip)
-    canvasAction.addEventListener('click', clickedState)
+
+    if(config.mapOptions.actions.click.active){
+        canvasAction.addEventListener('click', clickedState)
+    }
         
     function showTooltip (event) {
         ctxAction.clearRect(0,0, canvasAction.width,canvasAction.height)
@@ -343,7 +363,11 @@ function gerarAcao(){
             } 
             
         })
-        gerarTooltip(selecteState)
+        
+        if(config.mapOptions.actions.tooltip.active){
+            gerarTooltip(selecteState)
+        }
+        
     }
 
     function clickedState (event) {
@@ -360,12 +384,39 @@ function gerarAcao(){
 
 //Gerar Tooltip
 function gerarTooltip(state){
-    const dados = []
+    let dados = [];
     const font = 16
 
     mapFeature.map((estado) => {        
         if(state == estado.properties.name){
-            dados.push(state, "teste", "teste02", "Teste03", "Teste04", "teste06", "teste07", "teste08")
+            if(config.dataset.custom.active == false){
+                config.dataset.information.find((ds) => { 
+                    if(ds.name == state){
+                        dados = ds.data
+                    } else {
+                        dados = null
+                        dados = [state]
+                    }
+                }) 
+            } else {
+                config.dataset.custom.data.find((ds) => { 
+                    if(ds.name == state){
+                        dados = ds.information
+                    } else {
+                        dados = null
+                        dados = [state]
+                    }
+                }) 
+            }
+
+            if(dados[0] != state){
+                dados.unshift(state)
+            }
+
+            let toolWidth = maiorStringArray(dados) * (font / 2)
+            if(toolWidth < 100){
+                toolWidth = 100
+            }
             const qtd = dados.length
             let posX = []
             let posY = []
@@ -405,20 +456,28 @@ function gerarTooltip(state){
             }
             
             ctxAction.rotate(Math.PI/2);
-            ctxAction.fillStyle = "rgba(0,0,0,0.7)"
+            ctxAction.fillStyle = "rgba(0,0,0,0.9)"
             ctxAction.translate(0, -(((font) * qtd) / 2))
+
             if(dados.length <= 1){
-                ctxAction.fillRect(0,0,100,((font) * qtd))
-            } else {
-                ctxAction.lineTo(100,0)
-                ctxAction.lineTo(100,((font) * qtd))
-                ctxAction.lineTo(0,((font) * qtd))
-                ctxAction.lineTo(0,(((font) * qtd) / 2) - 10)
-                ctxAction.lineTo(-10,(((font) * qtd) / 2))
-                ctxAction.lineTo(0,(((font) * qtd) / 2) + 10)
-                ctxAction.lineTo(0,0)
+                ctxAction.moveTo(10,-10)
+                ctxAction.arcTo(toolWidth,-10,toolWidth,10,10)
+                ctxAction.arcTo(toolWidth,((font) * qtd) + 10,80,((font) * qtd) + 10,10)
+                ctxAction.arcTo(0,((font) * qtd) + 10,0,((font) * qtd) - 10,10)
+                ctxAction.arcTo(0,-10,10,-10,10)
                 ctxAction.fill()
-            }            
+            } else {
+                ctxAction.moveTo(10,-10)
+                ctxAction.arcTo(toolWidth,-10,toolWidth,10,10)
+                ctxAction.arcTo(toolWidth,((font) * qtd) + 10,80,((font) * qtd) + 10,10)
+                ctxAction.arcTo(0,((font) * qtd) + 10,0,((font) * qtd) - 10,10)
+                ctxAction.lineTo(0,(((font) * qtd) / 2) + 10)
+                ctxAction.lineTo(-10,(((font) * qtd) / 2))
+                ctxAction.lineTo(0,(((font) * qtd) / 2) - 10)
+                ctxAction.arcTo(0,-10,10,-10,10)
+                ctxAction.fill()
+            }
+
             ctxAction.restore()
             ctxAction.closePath()
             
@@ -446,6 +505,19 @@ function gerarTooltip(state){
     })
 }
 
+function maiorStringArray(stringArray){
+    let qtdCaractere = 0;
+    stringArray.map(text => {
+        if(qtdCaractere == 0){
+            qtdCaractere = text.length;
+        } else if(text.length > qtdCaractere){
+            qtdCaractere = text.length;
+        }
+        
+    })
+    return qtdCaractere;
+}
+
 gerarPreenchimento()
 if(config.mapOptions.border.display){
     gerarContorno()
@@ -455,6 +527,6 @@ if(config.mapOptions.labels.display){
     gerarLabels()
 }
 
-if(config.mapOptions.actions){
+if(config.mapOptions.actions.active){
     gerarAcao()
 }
