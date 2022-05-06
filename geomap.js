@@ -21,11 +21,11 @@ const config = {
             active: true,
 
             tooltip:{
-                active: false,
+                active: true,
             },
 
             click:{
-                active: false,
+                active: true,
             }
         }
     },
@@ -34,7 +34,7 @@ const config = {
         information:[
             {
                 name: "Rio Grande do Sul",
-                data: ["rio", "grande", "do", "sul"]
+                data: ["dados", "vindo", "do", "JSON"]
             }
         ],
         custom: {
@@ -105,6 +105,7 @@ var stateFills = []
 var selectedFill;
 var controllHover = 0;
 var colorArray = []
+var legends = []
 
 function verificaCor(){
     let cor = '#' + Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, '0');
@@ -505,6 +506,12 @@ function gerarTooltip(state){
     })
 }
 
+function gerarTitulos(){
+
+}
+
+
+
 function maiorStringArray(stringArray){
     let qtdCaractere = 0;
     stringArray.map(text => {
@@ -518,15 +525,106 @@ function maiorStringArray(stringArray){
     return qtdCaractere;
 }
 
-gerarPreenchimento()
-if(config.mapOptions.border.display){
-    gerarContorno()
+function gerarLegendas(rectColor, textColor){
+    const rect = new Path2D()
+    const text = new Path2D()
+
+    rectColor = "red"
+    textColor = "blue"
+
+    const index = legends.length + 1
+    const font = 16
+    const size = 12
+    let rectMargem
+    let textMargem
+
+    if(index == 1){
+        rectMargem = 0
+        textMargem = 0
+    } else {
+        rectMargem = 7
+        textMargem = 5
+    }
+
+    ctx.beginPath()
+    ctx.fillStyle = rectColor
+    ctx.save()
+    ctx.translate(canvas.width,-(canvas.height - 40))
+    ctx.rotate(Math.PI/2)
+    ctx.fillRect((canvas.width - size) - font, (10 * index) + rectMargem, size, size)
+        
+    ctx.fillStyle = textColor
+    ctx.font = font + "px calibri"
+    
+    ctx.fillText("Teste", (canvas.width - size) - (font) + size + 3, (10 + (size * index)) + textMargem)
+    ctx.restore()
+    ctx.closePath()
+
+    /*
+    ctx.beginPath()
+    ctx.fillStyle = rectColor
+    ctx.save()
+    ctx.translate(canvas.width,-(canvas.height - 40))
+    ctx.rotate(Math.PI/2)
+    ctx.fillRect((canvas.width - size) - (font * index), (10 * 2) + 7, size, size)
+        
+    ctx.fillStyle = textColor
+    ctx.font = font + "px calibri"
+    
+    ctx.fillText("Teste", (canvas.width - size) - (font) + size + 3, (10 + (size * 2)) + 5)
+    ctx.restore()
+    ctx.closePath()
+    */
+
+    legends.push({rect, text})
+    console.log(index)
 }
 
-if(config.mapOptions.labels.display){
-    gerarLabels()
+function draw(){
+    const legenda = true
+
+    if(legenda){
+        ctx.clearRect(0,0,canvas.width, canvas.height)
+        ctx.save()
+        ctx.scale(1/1.2,1/1.2)
+        ctx.translate(100, 130)
+            gerarPreenchimento()
+
+            if(config.mapOptions.border.display){
+                gerarContorno()
+            }
+
+            if(config.mapOptions.labels.display){
+                gerarLabels()
+            }
+        ctx.restore()
+        gerarLegendas()
+        gerarLegendas()
+        gerarLegendas()
+        gerarLegendas()
+        gerarLegendas()
+        gerarLegendas()
+
+        ctxAction.scale(1/1.2,1/1.2)
+        ctxAction.translate(100, 130)
+            if(config.mapOptions.actions.active){
+                gerarAcao()
+            }
+    } else {
+        gerarPreenchimento()
+
+        if(config.mapOptions.border.display){
+            gerarContorno()
+        }
+
+        if(config.mapOptions.labels.display){
+            gerarLabels()
+        }
+
+        if(config.mapOptions.actions.active){
+            gerarAcao()
+        }
+    }
 }
 
-if(config.mapOptions.actions.active){
-    gerarAcao()
-}
+draw()
