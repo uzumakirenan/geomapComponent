@@ -15,7 +15,7 @@ const config = {
             italic: false,
             align: "left",
             color: "#000",
-            display: true
+            display: false
         },
         actions: {
             active: true,
@@ -90,7 +90,7 @@ canvasContainer.appendChild(canvasAction)
 //BRAZIL = brasilMap
 //USA = usaMap
 //PARANA = paranaMap
-const mapName = brazilMap //<- COLOCAR O NOME DO MAPA AQUI
+const mapName = paranaMap //<- COLOCAR O NOME DO MAPA AQUI
 
 
 const mapScales = mapName.scales
